@@ -1,0 +1,17 @@
+{
+  "id": "jodinho/muria-afriquegemma-faw-finetune",
+  "title": "Muria: AfriqueGemma-4B Fall Armyworm Fine-Tuning",
+  "code_file": "muria_afriquegemma_faw_finetune.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
+
+
