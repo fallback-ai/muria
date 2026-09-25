@@ -106,9 +106,12 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 
-MODEL_ID = "fallback-ai/Muria-Afrique-Gemma-4B"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-model = AutoModelForCausalLM.from_pretrained(MODEL_ID, torch_dtype=torch.float16, device_map="auto")
+BASE_MODEL = "McGill-NLP/AfriqueGemma-4B"
+ADAPTER_ID = "fallback-ai/Muria-Afrique-Gemma-4B-LoRA"
+
+tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
+base_model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, torch_dtype=torch.float16, device_map="auto")
+model = PeftModel.from_pretrained(base_model, ADAPTER_ID)
 
 prompt = "How often I suppose check my maize for fall armyworm?"
 formatted = f"<start_of_turn>user\n{prompt}<end_of_turn>\n<start_of_turn>model\n"
@@ -119,3 +122,27 @@ with torch.no_grad():
 
 print(tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True))
 ```
+
+---
+
+## Multi-Format Mobile Conversion (.CACT, INT4, GGUF)
+
+To support flexible on-device deployment across diverse Android runtimes without retraining, raw LoRA adapters are distributed alongside the quantized GGUF:
+* **Dedicated Adapter Repo:** [`fallback-ai/Muria-Afrique-Gemma-4B-LoRA`](https://huggingface.co/fallback-ai/Muria-Afrique-Gemma-4B-LoRA)
+* **Main Repo Subfolder:** [`fallback-ai/Muria-Afrique-Gemma-4B/adapters`](https://huggingface.co/fallback-ai/Muria-Afrique-Gemma-4B)
+
+### Converting to Target Mobile Formats
+
+Use the provided conversion utility `scripts/merge_and_convert.py`:
+
+```bash
+# 1. Merge LoRA with McGill-NLP/AfriqueGemma-4B to produce 16-bit weights
+python scripts/merge_and_convert.py --action merge --output-dir ./muria-merged-fp16
+
+# 2. Build Cactus (.cact) format for ultra-compact mobile deployment
+python scripts/merge_and_convert.py --action cact --output-file muria.cact
+
+# 3. Quantize to GGUF (Q4_K_M or Q4_0) for llama.cpp
+python scripts/merge_and_convert.py --action gguf --quant-type Q4_K_M --llama-cpp-dir /path/to/llama.cpp
+```
+
